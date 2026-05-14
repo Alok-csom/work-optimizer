@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans,sans-serif);color:var(--color-text-primary);padding:1.5rem 1rem;max-width:800px;margin:0 auto}
+h1{font-size:20px;font-weight:500;margin-bottom:4px}
+.subtitle{font-size:13px;color:var(--color-text-secondary);margin-bottom:1.5rem}
+.screen{display:none}.screen.active{display:block}
+.signin-card{background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:12px;padding:2rem;max-width:420px;margin:3rem auto}
+.signin-card h2{font-size:17px;font-weight:500;margin-bottom:6px}
+.signin-card p{font-size:13px;color:var(--color-text-secondary);margin-bottom:1rem;line-height:1.5}
+.field{margin-bottom:14px}
+.field label{font-size:12px;font-weight:500;color:var(--color-text-secondary);display:block;margin-bottom:4px}
+.field input{width:100%;padding:8px 10px;border:0.5px solid var(--color-border-secondary);border-radius:8px;font-size:14px;background:var(--color-background-primary);color:var(--color-text-primary)}
+.field input:focus{outline:none;border-color:var(--color-border-primary)}
+.btn{display:inline-block;padding:9px 20px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;border:none;transition:opacity 0.15s}
+.btn-primary{background:#378add;color:#fff}.btn-primary:hover{opacity:0.88}.btn-primary:disabled{opacity:0.4;cursor:default}
+.btn-secondary{background:var(--color-background-secondary);border:0.5px solid var(--color-border-secondary);color:var(--color-text-primary)}.btn-secondary:hover{opacity:0.8}
+.btn-game{background:#d85a30;color:#fff;font-size:14px;padding:11px 28px;border-radius:10px;width:100%;margin-top:2rem}.btn-game:hover{opacity:0.88}
+.scenario-tabs{display:flex;gap:8px;margin-bottom:1.25rem;flex-wrap:wrap}
+.tab{padding:6px 14px;border:0.5px solid var(--color-border-secondary);border-radius:8px;font-size:13px;cursor:pointer;background:var(--color-background-primary);color:var(--color-text-secondary)}
+.tab.active{background:var(--color-background-secondary);color:var(--color-text-primary);border-color:var(--color-border-primary);font-weight:500}
+.scenario-desc{background:var(--color-background-secondary);border-radius:10px;padding:1rem 1.25rem;margin-bottom:1.25rem;border:0.5px solid var(--color-border-tertiary);font-size:13px;color:var(--color-text-secondary);line-height:1.6}
+.scenario-desc strong{color:var(--color-text-primary);font-weight:500}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:1.25rem}
+.card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:10px;padding:1rem 1.25rem}
+.card-title{font-size:11px;font-weight:500;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:12px}
+.slider-row{margin-bottom:13px}
+.slider-label{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;gap:6px}
+.slider-label-left{display:flex;align-items:center;gap:5px;font-size:13px;color:var(--color-text-primary)}
+.slider-val{font-size:13px;font-weight:500;min-width:36px;text-align:right}
+input[type=range]{width:100%}
+.hint{font-size:11px;color:var(--color-text-tertiary);margin-top:2px;line-height:1.4}
+.tip{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;border:0.5px solid var(--color-border-secondary);font-size:10px;color:var(--color-text-secondary);cursor:pointer;flex-shrink:0;position:relative}
+.tip:hover .tipbox,.tip.open .tipbox{display:block}
+.tipbox{display:none;position:absolute;left:20px;top:-4px;z-index:999;width:230px;background:#fff;border:1px solid #d0d0d0;border-radius:8px;padding:10px 12px;font-size:12px;color:#333;line-height:1.5;box-shadow:0 4px 16px rgba(0,0,0,0.18)}
+.tipbox strong{color:#111;font-weight:500;display:block;margin-bottom:4px}
+@media(prefers-color-scheme:dark){.tipbox{background:#2a2a2a;border-color:#555;color:#d0d0d0}.tipbox strong{color:#f0f0f0}}
+.derived-row{background:var(--color-background-secondary);border-radius:8px;padding:8px 10px;margin-bottom:10px;font-size:12px;color:var(--color-text-secondary);display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px}
+.derived-val{font-weight:500;color:var(--color-text-primary)}
+.result-card{border-radius:10px;padding:1.25rem;margin-bottom:1.25rem;border:0.5px solid var(--color-border-tertiary)}
+.res-automation{background:#e6f1fb;border-color:#b5d4f4;color:#042c53}.res-automation .rl{color:#185fa5}
+.res-augmentation{background:#eaf3de;border-color:#c0dd97;color:#173404}.res-augmentation .rl{color:#3b6d11}
+.res-human{background:#faeeda;border-color:#fac775;color:#412402}.res-human .rl{color:#854f0b}
+@media(prefers-color-scheme:dark){
+.res-automation{background:#0c447c;border-color:#185fa5;color:#b5d4f4}.res-automation .rl{color:#85b7eb}
+.res-augmentation{background:#27500a;border-color:#3b6d11;color:#c0dd97}.res-augmentation .rl{color:#97c459}
+.res-human{background:#633806;border-color:#854f0b;color:#fac775}.res-human .rl{color:#ef9f27}}
+.rl{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:5px}
+.rt{font-size:19px;font-weight:500;margin-bottom:5px}.rd{font-size:13px;line-height:1.6}
+.benefits-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:1.25rem}
+.benefit-card{background:var(--color-background-secondary);border-radius:8px;padding:11px}
+.benefit-label{font-size:11px;color:var(--color-text-secondary);margin-bottom:2px;display:flex;align-items:center;gap:4px}
+.bv{font-size:19px;font-weight:500}.bpos{color:#3b6d11}.bneg{color:#a32d2d}.bneu{color:var(--color-text-primary)}
+.vis-section{margin-bottom:1.25rem}
+.vis-title{font-size:13px;font-weight:500;color:var(--color-text-secondary);margin-bottom:7px}
+.zone-bar{display:flex;height:30px;border-radius:8px;overflow:hidden;border:0.5px solid var(--color-border-tertiary)}
+.zone-seg{display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;transition:width 0.3s;white-space:nowrap;overflow:hidden}
+.zone-h{background:#fac775;color:#412402}.zone-aug{background:#c0dd97;color:#173404}.zone-ai{background:#b5d4f4;color:#042c53}
+@media(prefers-color-scheme:dark){.zone-h{background:#854f0b;color:#faeeda}.zone-aug{background:#3b6d11;color:#eaf3de}.zone-ai{background:#185fa5;color:#e6f1fb}}
+.legend{display:flex;gap:14px;margin-top:5px;flex-wrap:wrap}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--color-text-secondary)}
+.ldot{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+.chart-card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:10px;padding:1rem 1.25rem;margin-bottom:1.25rem}
+.chart-legend{display:flex;gap:14px;margin-bottom:10px;flex-wrap:wrap}
+.cli{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--color-text-secondary)}
+.divider{border:none;border-top:0.5px solid var(--color-border-tertiary);margin:1.25rem 0}
+.ref-note{font-size:11px;color:var(--color-text-tertiary);line-height:1.5}
+.dec-rule{font-size:11px;color:var(--color-text-tertiary);margin-top:7px;padding:6px 8px;background:var(--color-background-secondary);border-radius:8px;line-height:1.6}
+.user-bar{display:flex;align-items:center;justify-content:space-between;background:var(--color-background-secondary);border-radius:8px;padding:8px 14px;margin-bottom:1.25rem;font-size:13px}
+.user-bar strong{font-weight:500}
+.phase-header{font-size:16px;font-weight:500;margin-bottom:4px}
+.phase-sub{font-size:13px;color:var(--color-text-secondary);margin-bottom:1.25rem;line-height:1.5}
+.game-progress{display:flex;gap:6px;margin-bottom:1.25rem}
+.gp-dot{width:28px;height:6px;border-radius:3px;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary)}
+.gp-dot.done{background:#378add}.gp-dot.active{background:#d85a30}
+.game-scenario-card{background:var(--color-background-secondary);border-radius:10px;padding:1.25rem;margin-bottom:1.25rem;border:0.5px solid var(--color-border-tertiary)}
+.game-scenario-card h3{font-size:15px;font-weight:500;margin-bottom:6px}
+.game-scenario-card p{font-size:13px;color:var(--color-text-secondary);line-height:1.6;margin-bottom:1rem}
+.param-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:1rem}
+.param-item{background:var(--color-background-primary);border-radius:8px;padding:9px 12px;border:0.5px solid var(--color-border-tertiary)}
+.param-item .pl{font-size:11px;color:var(--color-text-secondary);margin-bottom:2px}
+.param-item .pv{font-size:16px;font-weight:500}
+.alloc-section{margin-bottom:1rem}
+.alloc-section h4{font-size:13px;font-weight:500;margin-bottom:4px}
+.alloc-section p{font-size:12px;color:var(--color-text-secondary);margin-bottom:10px}
+.alloc-inputs{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:8px}
+.alloc-box{background:var(--color-background-primary);border-radius:8px;padding:10px;border:0.5px solid var(--color-border-tertiary);text-align:center}
+.alloc-box label{font-size:11px;color:var(--color-text-secondary);display:block;margin-bottom:6px;line-height:1.4}
+.alloc-box input{width:100%;text-align:center;font-size:18px;font-weight:500;border:none;background:transparent;color:var(--color-text-primary);outline:none}
+.alloc-box .ab-dot{width:10px;height:10px;border-radius:2px;margin:0 auto 5px}
+.sum-indicator{font-size:13px;text-align:center;padding:6px;border-radius:6px;margin-bottom:10px;font-weight:500}
+.sum-ok{background:#eaf3de;color:#3b6d11}.sum-bad{background:#faeeda;color:#854f0b}
+@media(prefers-color-scheme:dark){.sum-ok{background:#27500a;color:#c0dd97}.sum-bad{background:#633806;color:#fac775}}
+.results-table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:1.5rem}
+.results-table th{font-size:11px;font-weight:500;color:var(--color-text-secondary);text-align:left;padding:6px 10px;border-bottom:0.5px solid var(--color-border-tertiary)}
+.results-table td{padding:8px 10px;border-bottom:0.5px solid var(--color-border-tertiary);vertical-align:top}
+.results-table tr:last-child td{border-bottom:none}
+.score-pill{display:inline-block;padding:2px 9px;border-radius:20px;font-size:12px;font-weight:500}
+.sp5{background:#eaf3de;color:#3b6d11}.sp4{background:#e6f1fb;color:#185fa5}.sp3{background:#faeeda;color:#854f0b}.sp2{background:#fde8e8;color:#8b2020}.sp1{background:#f5f5f5;color:#555}
+@media(prefers-color-scheme:dark){.sp5{background:#27500a;color:#c0dd97}.sp4{background:#0c447c;color:#b5d4f4}.sp3{background:#633806;color:#fac775}.sp2{background:#5c1c1c;color:#f5a5a5}.sp1{background:#333;color:#aaa}}
+.total-score{background:var(--color-background-secondary);border-radius:10px;padding:1.25rem;text-align:center;margin-bottom:1.25rem;border:0.5px solid var(--color-border-tertiary)}
+.total-score .ts-num{font-size:48px;font-weight:500;line-height:1}
+.total-score .ts-den{font-size:18px;color:var(--color-text-secondary)}
+.total-score .ts-label{font-size:13px;color:var(--color-text-secondary);margin-top:4px}
+.sheets-section{background:var(--color-background-secondary);border-radius:10px;padding:1.25rem;margin-bottom:1.25rem;border:0.5px solid var(--color-border-tertiary)}
+.sheets-section h3{font-size:14px;font-weight:500;margin-bottom:6px}
+.sheets-section p{font-size:13px;color:var(--color-text-secondary);line-height:1.5}
+.submit-status{font-size:12px;margin-top:8px;color:var(--color-text-secondary)}
+.alloc-compare{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+.ac-item{font-size:11px;padding:2px 7px;border-radius:4px;background:var(--color-background-secondary)}
+.version-badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:500;margin-bottom:12px}
+.badge-orange{background:#faeeda;color:#854f0b}
+.badge-blue{background:#e6f1fb;color:#185fa5}
+.badge-green{background:#eaf3de;color:#3b6d11}
+.badge-purple{background:#f0ebfa;color:#5b2d8e}
+.ver-blue{color:#185fa5}.ver-green{color:#3b6d11}.ver-orange{color:#854f0b}.ver-purple{color:#5b2d8e}
+</style>
+</head>
+<body>
+
+<div id="screen-signin" class="screen active">
+  <h1>Human-AI Work Arrangement Optimizer</h1>
+  <p class="subtitle">Based on Fügener, Walzner & Gupta (2026) — Management Science</p>
+  <div class="signin-card">
+    <h2 id="si-heading">Welcome</h2>
+    <p>Explore how AI and humans can optimally collaborate on judgment tasks, then test your intuition in the game.</p>
+    <div class="version-badge" id="si-badge"></div>
+    <div class="field"><label>Full name</label><input id="si-name" placeholder="e.g. Jane Smith" oninput="checkSignin()"></div>
+    <div class="field"><label>Email</label><input id="si-email" type="email" placeholder="e.g. jane@university.edu" oninput="checkSignin()"></div>
+    <button class="btn btn-primary" id="si-btn" onclick="doSignin()" disabled style="width:100%;margin-top:6px">Enter</button>
+  </div>
+</div>
+
+<div id="screen-explorer" class="screen">
+  <div class="user-bar">
+    <span>Signed in as <strong id="ub-name"></strong> · <span id="ub-ver"></span></span>
+    <button class="btn btn-secondary" onclick="startGame()" style="font-size:12px">Start Game →</button>
+  </div>
+  <h1>Human-AI Work Arrangement Explorer</h1>
+  <p class="subtitle">Explore how complementarity drives optimal work allocation, then click Start Game when ready.</p>
+  <div class="scenario-tabs">
+    <button class="tab active" onclick="setScenario('radiology',this)">Radiology</button>
+    <button class="tab" onclick="setScenario('insurance',this)">Insurance fraud</button>
+    <button class="tab" onclick="setScenario('aml',this)">Anti-money laundering</button>
+  </div>
+  <div class="scenario-desc" id="scen-desc"></div>
+  <div class="grid2">
+    <div class="card">
+      <div class="card-title">Performance inputs</div>
+      <div class="slider-row">
+        <div class="slider-label"><div class="slider-label-left"><span id="lbl-ai">AI accuracy</span><div class="tip">?<div class="tipbox"><strong>AI accuracy</strong>Average probability the AI correctly solves a task of this type.</div></div></div><span class="slider-val" id="val-ai">0.77</span></div>
+        <input type="range" id="sl-ai" min="0" max="100" step="1" oninput="updateExplorer()">
+        <div class="hint" id="hint-ai"></div>
+      </div>
+      <div class="slider-row">
+        <div class="slider-label"><div class="slider-label-left"><span id="lbl-h">Human accuracy</span><div class="tip">?<div class="tipbox"><strong>Human accuracy</strong>Average probability a human expert correctly solves a task alone — the baseline reference.</div></div></div><span class="slider-val" id="val-h">0.68</span></div>
+        <input type="range" id="sl-h" min="0" max="100" step="1" oninput="updateExplorer()">
+        <div class="hint" id="hint-h"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Complementarity inputs</div>
+      <div class="slider-row">
+        <div class="slider-label"><div class="slider-label-left"><span>Between-task comp. (b)</span><div class="tip">?<div class="tipbox"><strong>Between-task complementarity (b)</strong>Slope of human on AI performance: p_H = a + b·p_AI. Low/negative b: humans excel where AI fails. Paper found b = 0.31.</div></div></div><span class="slider-val" id="val-b">0.31</span></div>
+        <input type="range" id="sl-b" min="-80" max="100" step="1" oninput="updateExplorer()">
+        <div class="hint">Low b → humans & AI differ across tasks → more automation benefit.</div>
+      </div>
+      <div class="slider-row">
+        <div class="slider-label"><div class="slider-label-left"><span>Within-task comp. (r̂)</span><div class="tip">?<div class="tipbox"><strong>Within-task complementarity (r̂)</strong>Ratio of weight on correct vs. incorrect AI advice. r̂ > 1: augmentation helps. Paper found r̂ = 1.52.</div></div></div><span class="slider-val" id="val-r">1.52</span></div>
+        <input type="range" id="sl-r" min="50" max="300" step="1" oninput="updateExplorer()">
+        <div class="hint">Higher r̂ → augmentation beats automation over a wider range.</div>
+      </div>
+    </div>
+  </div>
+  <div class="card" style="margin-bottom:1.25rem">
+    <div class="card-title">Derived quantities & decision rules</div>
+    <div class="derived-row"><span>Effective p_H: <span class="derived-val" id="d-ph">—</span></span><span>Relative AI (relAI): <span class="derived-val" id="d-relai">—</span></span><span>Augmented accuracy: <span class="derived-val" id="d-aug">—</span></span></div>
+    <div class="dec-rule" id="d-rules">—</div>
+  </div>
+  <div class="result-card" id="result-card">
+    <div class="rl" id="res-rl">Optimal constellation</div>
+    <div class="rt" id="res-title">—</div>
+    <div class="rd" id="res-desc">—</div>
+  </div>
+  <div class="benefits-grid">
+    <div class="benefit-card"><div class="benefit-label">Substitution benefit<div class="tip">?<div class="tipbox"><strong>Substitution benefit</strong>Gain from AI replacing humans where p_AI > p_H.</div></div></div><div class="bv" id="b-sub">—</div></div>
+    <div class="benefit-card"><div class="benefit-label">Augmentation benefit<div class="tip">?<div class="tipbox"><strong>Augmentation benefit</strong>Gain from AI advising humans when r̂ > 1.</div></div></div><div class="bv" id="b-aug">—</div></div>
+    <div class="benefit-card"><div class="benefit-label">Reallocation benefit<div class="tip">?<div class="tipbox"><strong>Reallocation benefit</strong>Freed humans form expert crowds on hard tasks — wisdom-of-crowds boosts accuracy beyond individual performance.</div></div></div><div class="bv" id="b-re">—</div></div>
+  </div>
+  <div class="vis-section">
+    <div class="vis-title">Optimal task allocation across difficulty levels</div>
+    <div class="zone-bar" id="zone-bar"></div>
+    <div class="legend">
+      <div class="legend-item"><div class="ldot" style="background:#fac775"></div>Human crowd (hardest)</div>
+      <div class="legend-item"><div class="ldot" style="background:#c0dd97"></div>Human + AI augmentation</div>
+      <div class="legend-item"><div class="ldot" style="background:#b5d4f4"></div>AI automation (easiest)</div>
+    </div>
+  </div>
+  <div class="chart-card">
+    <div class="card-title">Accuracy by work arrangement</div>
+    <div class="chart-legend"><div class="cli"><div class="ldot" style="background:#73726c"></div>Baseline</div><div class="cli"><div class="ldot" style="background:#378add"></div>Full automation</div><div class="cli"><div class="ldot" style="background:#639922"></div>Full augmentation</div><div class="cli"><div class="ldot" style="background:#d85a30"></div>Framework (optimal)</div></div>
+    <div style="position:relative;width:100%;height:220px"><canvas id="perfChart"></canvas></div>
+  </div>
+  <div class="chart-card">
+    <div class="card-title">Benefit decomposition over baseline</div>
+    <div class="chart-legend"><div class="cli"><div class="ldot" style="background:#378add"></div>Substitution</div><div class="cli"><div class="ldot" style="background:#639922"></div>Augmentation</div><div class="cli"><div class="ldot" style="background:#d85a30"></div>Reallocation</div></div>
+    <div style="position:relative;width:100%;height:190px"><canvas id="benefitChart"></canvas></div>
+  </div>
+  <button class="btn btn-game" onclick="startGame()">I'm ready — Start the Work Organization Game →</button>
+  <div style="height:1rem"></div>
+  <hr class="divider">
+  <p class="ref-note">Fügener, Walzner & Gupta (2026). Management Science, 72(1), 538–557. Fügener et al. (2021). MIS Quarterly, 45(3), 1527–1556.</p>
+</div>
+
+<div id="screen-game" class="screen">
+  <div class="user-bar">
+    <span>Signed in as <strong id="gb-name"></strong> · <span id="gb-ver"></span></span>
+    <span style="font-size:12px;color:var(--color-text-secondary)">Work Organization Game</span>
+  </div>
+  <div class="phase-header">Work Organization Game</div>
+  <p class="phase-sub">For each scenario, allocate 100% of tasks across the three work constellations. Humans freed by automation form crowds on hard tasks — use this to your advantage!</p>
+  <div class="game-progress" id="game-progress"></div>
+  <div id="game-round-container"></div>
+</div>
+
+<div id="screen-results" class="screen">
+  <div class="user-bar">
+    <span>Signed in as <strong id="rb-name"></strong> · <span id="rb-ver"></span></span>
+    <span style="font-size:12px;color:var(--color-text-secondary)">Results</span>
+  </div>
+  <div class="phase-header">Your Results</div>
+  <div class="total-score"><div><span class="ts-num" id="total-score-num">—</span><span class="ts-den">/25</span></div><div class="ts-label" id="total-score-label">—</div></div>
+  <table class="results-table">
+    <thead><tr><th>Scenario</th><th>Your allocation</th><th>Optimal allocation</th><th>Your accuracy</th><th>Optimal accuracy</th><th>Score</th></tr></thead>
+    <tbody id="results-body"></tbody>
+  </table>
+  <div class="sheets-section">
+    <h3>Results submitted</h3>
+    <p>Your results are being automatically recorded.</p>
+    <div class="submit-status" id="submit-status">Submitting…</div>
+  </div>
+  <button class="btn btn-secondary" onclick="location.reload()" style="margin-top:8px">Start over</button>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+(function(){
+'use strict';
+
+// ════════════════════════════════════════════════════
+// CONFIGURATION — change these 4 lines per version
+// ════════════════════════════════════════════════════
+var APP_VERSION     = 'MSBA 6155';
+var APP_WELCOME     = 'Welcome MSBA 6155 Students to Work Optimization with AI';
+var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwelKPTP9y_cXGY_5gBIVtKjGgkaL7A0ccBfOmG124uvSlhqLdqME2zS5tRy2Jc71-Z/exec';
+var BADGE_COLOR     = 'blue';
+
+// ════════════════════════════════════════════════════
+// CORE MATH — defined first, no dependencies
+// ════════════════════════════════════════════════════
+function clamp(v,lo,hi){ return Math.max(lo,Math.min(hi,v)); }
+
+function computeScore(stuAcc, optAcc){
+  if(optAcc<=0) return 1;
+  var r=stuAcc/optAcc;
+  if(r>=0.98) return 5;
+  if(r>=0.90) return 4;
+  if(r>=0.80) return 3;
+  if(r>=0.70) return 2;
+  return 1;
+}
+
+// Human-human complementarity: 20% unique knowledge per additional human
+var HHC=0.20;
+
+function binomCoeff(n,k){
+  if(k<0||k>n) return 0;
+  if(k===0||k===n) return 1;
+  var c=1;
+  for(var i=0;i<Math.min(k,n-k);i++) c=c*(n-i)/(i+1);
+  return c;
+}
+
+function binomCrowd(n,p){
+  if(n<=1) return p;
+  var acc=0, maj=Math.floor(n/2)+1;
+  for(var k=maj;k<=n;k++) acc+=binomCoeff(n,k)*Math.pow(p,k)*Math.pow(1-p,n-k);
+  if(n%2===0){ var kTie=n/2; acc+=0.5*binomCoeff(n,kTie)*Math.pow(p,kTie)*Math.pow(1-p,kTie); }
+  return clamp(acc,0,0.99);
+}
+
+function crowdAcc(pH,nRaw){
+  var nEff=1+(nRaw-1)*HHC;
+  var nLo=Math.max(1,Math.floor(nEff)), nHi=nLo+1, w=nEff-nLo;
+  return (1-w)*binomCrowd(nLo,pH)+w*binomCrowd(nHi,pH);
+}
+
+// splitAcc: accuracy for a given allocation (aiPct/augPct/hPct)
+// Freed humans from automation go to crowd human tasks
+function splitAcc(pAI,pH,b,rHat,aiPct,augPct,hPct){
+  var a=pH-b*pAI;
+  var N=100;
+  var slope=Math.min(pAI-0.05,0.95-pAI)*1.6;
+  var rAI=rHat/(1+rHat), rBad=1/(1+rHat);
+  var nH=Math.round(hPct/100*N);
+  var nAug=Math.round(augPct/100*N);
+  var crowdSize=hPct>0?(hPct+aiPct)/hPct:1;
+  var total=0;
+  for(var i=0;i<N;i++){
+    var t=(i+0.5)/N;
+    var pt=clamp(pAI+slope*(t-0.5),0.01,0.99);
+    var ht=clamp(a+b*pt,0.01,0.99);
+    var pAugT=clamp(pt*(ht+rAI*(1-ht))+(1-pt)*(ht-rBad*ht),0,0.99);
+    var acc;
+    if(i<nH)          acc=crowdAcc(ht,crowdSize);
+    else if(i<nH+nAug) acc=pAugT;
+    else               acc=pt;
+    total+=acc;
+  }
+  return clamp(total/N,0,0.99);
+}
+
+// Brute-force optimal split in 5% steps
+function calcOptimal(pAI,pH,b,rHat){
+  var best=-1,bAI=0,bAug=0,bH=100;
+  for(var ai=0;ai<=100;ai+=5){
+    for(var aug=0;aug<=100-ai;aug+=5){
+      var h=100-ai-aug;
+      var acc=splitAcc(pAI,pH,b,rHat,ai,aug,h);
+      if(acc>best){best=acc;bAI=ai;bAug=aug;bH=h;}
+    }
+  }
+  return {optAI:bAI,optAug:bAug,optH:bH,frameAcc:best};
+}
+
+// Full benchmarks for explorer charts
+function calcFramework(pAI,pH,b,rHat){
+  var opt=calcOptimal(pAI,pH,b,rHat);
+  var a=pH-b*pAI,N=100,slope=Math.min(pAI-0.05,0.95-pAI)*1.6;
+  var rAI=rHat/(1+rHat),rBad=1/(1+rHat);
+  var fAuto=0,fAug=0,fBase=0;
+  for(var i=0;i<N;i++){
+    var t=(i+0.5)/N;
+    var pt=clamp(pAI+slope*(t-0.5),0.01,0.99);
+    var ht=clamp(a+b*pt,0.01,0.99);
+    fAuto+=pt;
+    fAug+=clamp(pt*(ht+rAI*(1-ht))+(1-pt)*(ht-rBad*ht),0,0.99);
+    fBase+=ht;
+  }
+  return Object.assign({},opt,{
+    fullAuto:clamp(fAuto/N,0,0.99),
+    fullAug:clamp(fAug/N,0,0.99),
+    baselineAcc:clamp(fBase/N,0,0.99),
+    a:a
+  });
+}
+
+// ════════════════════════════════════════════════════
+// SCENARIO DATA
+// ════════════════════════════════════════════════════
+var SCENARIO_META={
+  radiology:{label:'Radiology',desc:'A hospital radiology department uses AI to analyze medical scans (X-rays, MRIs). Scans vary widely — some straightforward, others highly ambiguous.',aiLabel:'AI diagnostic accuracy',hLabel:'Radiologist accuracy (solo)'},
+  insurance:{label:'Insurance fraud',desc:'An insurer processes thousands of claims daily. AI flags suspicious patterns with varying confidence — from clear-cut cases to highly ambiguous ones.',aiLabel:'AI fraud detection accuracy',hLabel:'Investigator accuracy (solo)'},
+  aml:{label:'Anti-money laundering',desc:"A bank's compliance team reviews AI-generated transaction alerts. Some are obvious; many require nuanced human judgment about suspicious patterns.",aiLabel:'AI alert classification accuracy',hLabel:'Analyst accuracy (solo)'}
+};
+
+var SCENARIOS={
+  radiology:{aiLabel:'AI diagnostic accuracy',hLabel:'Radiologist accuracy (solo)',aiMin:72,aiMax:97,aiDef:80,hMin:50,hMax:72,hDef:65,bMin:-50,bMax:90,bDef:20,rMin:70,rMax:300,rDef:152,hintAi:'AI diagnostic accuracy: 72%–97%',hintH:'Solo radiologist accuracy: 50%–72%'},
+  insurance:{aiLabel:'AI fraud detection accuracy',hLabel:'Investigator accuracy (solo)',aiMin:72,aiMax:95,aiDef:78,hMin:48,hMax:70,hDef:62,bMin:-40,bMax:90,bDef:18,rMin:70,rMax:300,rDef:140,hintAi:'AI claim-scoring accuracy: 72%–95%',hintH:'Solo investigator accuracy: 48%–70%'},
+  aml:{aiLabel:'AI alert classification accuracy',hLabel:'Analyst accuracy (solo)',aiMin:72,aiMax:92,aiDef:76,hMin:46,hMax:68,hDef:60,bMin:-30,bMax:90,bDef:22,rMin:70,rMax:300,rDef:145,hintAi:'AML AI accuracy: 72%–92%',hintH:'Solo analyst accuracy: 46%–68%'}
+};
+
+// ════════════════════════════════════════════════════
+// GAME ROUND GENERATOR
+// 5 archetypes defined by their OPTIMAL ALLOCATION RANGES
+// ════════════════════════════════════════════════════
+var ARCHETYPES=[
+  {name:'near_full_auto',   minAI:75,maxAI:100,minAug:0, maxAug:15, minH:0, maxH:10},
+  {name:'near_full_human',  minAI:0, maxAI:15, minAug:0, maxAug:20, minH:65,maxH:100},
+  {name:'heavy_aug',        minAI:0, maxAI:25, minAug:55,maxAug:100,minH:0, maxH:30},
+  {name:'mixed_auto_aug',   minAI:30,maxAI:60, minAug:25,maxAug:60, minH:0, maxH:25},
+  {name:'mixed_human_auto', minAI:25,maxAI:55, minAug:0, maxAug:30, minH:25,maxH:55}
+];
+
+var PARAM_SPACE={
+  radiology:{aiRange:[0.76,0.94],hRange:[0.62,0.84],bRange:[-0.30,0.90],rRange:[0.5,4.0]},
+  insurance:{aiRange:[0.76,0.92],hRange:[0.62,0.82],bRange:[-0.30,0.90],rRange:[0.5,4.0]},
+  aml:      {aiRange:[0.76,0.90],hRange:[0.62,0.80],bRange:[-0.30,0.90],rRange:[0.5,4.0]}
+};
+
+function rndFixed(lo,hi){ return parseFloat((lo+Math.random()*(hi-lo)).toFixed(2)); }
+
+function tryGenerate(arch,domain){
+  var ps=PARAM_SPACE[domain];
+  for(var t=0;t<2000;t++){
+    var pAI=rndFixed(ps.aiRange[0],ps.aiRange[1]);
+    var maxGap=arch.name==='near_full_auto'?0.30:0.12;
+    var minH2=Math.max(ps.hRange[0],pAI-maxGap);
+    var maxH2=Math.min(ps.hRange[1],pAI-0.01);
+    if(minH2>=maxH2) continue;
+    var pH=rndFixed(minH2,maxH2);
+    var b=rndFixed(ps.bRange[0],ps.bRange[1]);
+    var rHat=rndFixed(ps.rRange[0],ps.rRange[1]);
+    var a=pH-b*pAI;
+    if(clamp(a+b*0.01,0.01,0.99)<0.30) continue;
+    if(clamp(a+b*0.99,0.01,0.99)<0.30) continue;
+    var opt=calcOptimal(pAI,pH,b,rHat);
+    if(opt.frameAcc<pAI-0.001) continue;
+    if(opt.frameAcc<0.76||opt.frameAcc>0.95) continue;
+    if(opt.optAI<arch.minAI||opt.optAI>arch.maxAI) continue;
+    if(opt.optAug<arch.minAug||opt.optAug>arch.maxAug) continue;
+    if(opt.optH<arch.minH||opt.optH>arch.maxH) continue;
+    var eqAcc=splitAcc(pAI,pH,b,rHat,33,33,34);
+    if((opt.frameAcc-eqAcc)<0.05) continue;
+    var optMode=opt.optAI>=opt.optAug&&opt.optAI>=opt.optH?'automation':opt.optAug>=opt.optH?'augmentation':'human';
+    return {domain:domain,pAI:pAI,pH:pH,b:b,rHat:rHat,optMode:optMode,
+            optAI:opt.optAI,optAug:opt.optAug,optH:opt.optH,frameAcc:opt.frameAcc};
+  }
+  return null;
+}
+
+function generateGameRounds(){
+  var shuffArch=[].concat(ARCHETYPES).sort(function(){return Math.random()-0.5;});
+  var domains=['radiology','insurance','aml'];
+  var shuffDom=domains.concat(domains[Math.floor(Math.random()*3)],domains[Math.floor(Math.random()*3)]).sort(function(){return Math.random()-0.5;}).slice(0,5);
+  var fallbacks={
+    near_full_auto:  {pAI:0.92,pH:0.64,b:-0.10,rHat:0.80},
+    near_full_human: {pAI:0.80,pH:0.78,b:0.82, rHat:0.70},
+    heavy_aug:       {pAI:0.80,pH:0.78,b:0.15, rHat:3.50},
+    mixed_auto_aug:  {pAI:0.85,pH:0.78,b:0.10, rHat:2.20},
+    mixed_human_auto:{pAI:0.84,pH:0.80,b:0.58, rHat:1.10}
+  };
+  var rounds=[];
+  for(var i=0;i<5;i++){
+    var arch=shuffArch[i], domain=shuffDom[i];
+    var r=tryGenerate(arch,domain);
+    if(!r){
+      for(var di=0;di<domains.length;di++){
+        r=tryGenerate(arch,domains[di]);
+        if(r) break;
+      }
+    }
+    if(!r){
+      var fb=fallbacks[arch.name];
+      var opt=calcOptimal(fb.pAI,fb.pH,fb.b,fb.rHat);
+      r={domain:domain,pAI:fb.pAI,pH:fb.pH,b:fb.b,rHat:fb.rHat,
+         optAI:opt.optAI,optAug:opt.optAug,optH:opt.optH,frameAcc:opt.frameAcc,optMode:'automation'};
+    }
+    rounds.push(r);
+  }
+  return rounds;
+}
+
+var GAME_ROUNDS=generateGameRounds();
+
+// ════════════════════════════════════════════════════
+// APP STATE
+// ════════════════════════════════════════════════════
+var userName='',userEmail='',gameAnswers=[],perfChart=null,benefitChart=null,currentRound=0;
+
+// ════════════════════════════════════════════════════
+// INIT UI
+// ════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded',function(){
+  document.getElementById('si-badge').textContent=APP_VERSION;
+  document.getElementById('si-badge').className='version-badge badge-'+BADGE_COLOR;
+  document.getElementById('si-heading').textContent=APP_WELCOME;
+  ['ub-ver','gb-ver','rb-ver'].forEach(function(id){
+    document.getElementById(id).textContent=APP_VERSION;
+    document.getElementById(id).className='ver-'+BADGE_COLOR;
+  });
+});
+
+// ════════════════════════════════════════════════════
+// SIGN IN
+// ════════════════════════════════════════════════════
+function checkSignin(){
+  var n=document.getElementById('si-name').value.trim();
+  var e=document.getElementById('si-email').value.trim();
+  document.getElementById('si-btn').disabled=!(n&&e&&e.includes('@'));
+}
+function doSignin(){
+  userName=document.getElementById('si-name').value.trim();
+  userEmail=document.getElementById('si-email').value.trim();
+  if(!userName||!userEmail) return;
+  ['ub-name','gb-name','rb-name'].forEach(function(id){document.getElementById(id).textContent=userName;});
+  showScreen('screen-explorer');
+  initCharts();
+  setScenario('radiology',document.querySelector('#screen-explorer .tab.active'));
+}
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
+  document.getElementById(id).classList.add('active');
+}
+
+// ════════════════════════════════════════════════════
+// CHARTS
+// ════════════════════════════════════════════════════
+function initCharts(){
+  if(perfChart) perfChart.destroy();
+  if(benefitChart) benefitChart.destroy();
+  perfChart=new Chart(document.getElementById('perfChart'),{
+    type:'bar',
+    data:{labels:['Baseline','Full automation','Full augmentation','Framework (optimal)'],
+      datasets:[{data:[0,0,0,0],backgroundColor:['#73726c','#378add','#639922','#d85a30'],borderRadius:4,borderSkipped:false}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return ' '+c.parsed.y.toFixed(1)+'%';}}}},
+      scales:{y:{min:0,max:100,ticks:{callback:function(v){return v+'%';},font:{size:11}},grid:{color:'rgba(128,128,128,0.1)'}},
+              x:{ticks:{font:{size:11}},grid:{display:false}}}}
+  });
+  benefitChart=new Chart(document.getElementById('benefitChart'),{
+    type:'bar',
+    data:{labels:['Full automation','Full augmentation','Framework (optimal)'],
+      datasets:[
+        {label:'Substitution',data:[0,0,0],backgroundColor:'#378add',stack:'s'},
+        {label:'Augmentation',data:[0,0,0],backgroundColor:'#639922',stack:'s'},
+        {label:'Reallocation',data:[0,0,0],backgroundColor:'#d85a30',stack:'s'}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return ' '+c.dataset.label+': '+c.parsed.y.toFixed(1)+'pp';}}}},
+      scales:{y:{ticks:{callback:function(v){return v+'pp';},font:{size:11}},grid:{color:'rgba(128,128,128,0.1)'},
+                  title:{display:true,text:'vs baseline (pp)',font:{size:10}}},
+              x:{ticks:{font:{size:11}},grid:{display:false}}}}
+  });
+}
+
+// ════════════════════════════════════════════════════
+// EXPLORER
+// ════════════════════════════════════════════════════
+function setScenario(key,el){
+  document.querySelectorAll('#screen-explorer .tab').forEach(function(t){t.classList.remove('active');});
+  el.classList.add('active');
+  var s=SCENARIOS[key], m=SCENARIO_META[key];
+  document.getElementById('scen-desc').innerHTML='<strong>'+m.label+'.</strong> '+m.desc;
+  document.getElementById('lbl-ai').textContent=s.aiLabel;
+  document.getElementById('lbl-h').textContent=s.hLabel;
+  document.getElementById('hint-ai').textContent=s.hintAi;
+  document.getElementById('hint-h').textContent=s.hintH;
+  function set(id,mn,mx,v){var e=document.getElementById(id);e.min=mn;e.max=mx;e.value=v;}
+  set('sl-ai',s.aiMin,s.aiMax,s.aiDef);
+  set('sl-h', s.hMin, s.hMax, s.hDef);
+  set('sl-b', s.bMin, s.bMax, s.bDef);
+  set('sl-r', s.rMin, s.rMax, s.rDef);
+  updateExplorer();
+}
+
+function updateExplorer(){
+  var pAI=clamp(parseInt(document.getElementById('sl-ai').value)/100,0.01,0.99);
+  var pH =clamp(parseInt(document.getElementById('sl-h').value)/100, 0.01,0.99);
+  var b  =parseInt(document.getElementById('sl-b').value)/100;
+  var rHat=clamp(parseInt(document.getElementById('sl-r').value)/100,0.01,10);
+  document.getElementById('val-ai').textContent=pAI.toFixed(2);
+  document.getElementById('val-h').textContent =pH.toFixed(2);
+  document.getElementById('val-b').textContent =b.toFixed(2);
+  document.getElementById('val-r').textContent =rHat.toFixed(2);
+
+  var f=calcFramework(pAI,pH,b,rHat);
+  var relAI=(pAI/(1-pAI))/(pH/(1-pH));
+  var rAI=rHat/(1+rHat),rBad=1/(1+rHat);
+  var pAugAvg=clamp(pAI*(pH+rAI*(1-pH))+(1-pAI)*(pH-rBad*pH),0,0.99);
+  var aBsAug=relAI>rHat,aBsH=relAI>1,augBH=relAI>(1/rHat);
+  var mode=aBsH&&aBsAug?'automation':augBH&&!aBsAug?'augmentation':'human';
+
+  document.getElementById('d-ph').textContent   =pH.toFixed(3);
+  document.getElementById('d-relai').textContent=relAI.toFixed(3);
+  document.getElementById('d-aug').textContent  =(pAugAvg*100).toFixed(1)+'%';
+  document.getElementById('d-rules').innerHTML=
+    '<b>Decision rules (Eqs. 11–13):</b><br>'+
+    'Auto > Aug? relAI ('+relAI.toFixed(2)+') '+(aBsAug?'>':'≤')+' r̂ ('+rHat.toFixed(2)+') → <b>'+(aBsAug?'Yes':'No')+'</b> &nbsp;|&nbsp;'+
+    'Auto > Human? relAI '+(aBsH?'>':'≤')+' 1 → <b>'+(aBsH?'Yes':'No')+'</b> &nbsp;|&nbsp;'+
+    'Aug > Human? relAI ('+relAI.toFixed(2)+') '+(augBH?'>':'≤')+' 1/r̂ ('+(1/rHat).toFixed(2)+') → <b>'+(augBH?'Yes':'No')+'</b>';
+
+  var mm={
+    automation:{cls:'res-automation',label:'Automation recommended',desc:'AI ('+( pAI*100).toFixed(0)+'%) exceeds human ('+(pH*100).toFixed(0)+'%). relAI ('+relAI.toFixed(2)+') exceeds both thresholds. Freed humans form crowds on any remaining hard tasks.'},
+    augmentation:{cls:'res-augmentation',label:'Augmentation recommended',desc:'Comparable performance — relAI ('+relAI.toFixed(2)+') between 1/r̂ ('+(1/rHat).toFixed(2)+') and r̂ ('+rHat.toFixed(2)+'). Pair humans with AI advice.'},
+    human:{cls:'res-human',label:'Human crowd recommended',desc:'AI insufficient — relAI ('+relAI.toFixed(2)+') below 1/r̂ ('+(1/rHat).toFixed(2)+'). Use expert crowds — wisdom-of-crowds dramatically boosts accuracy beyond individual performance.'}
+  };
+  document.getElementById('result-card').className='result-card '+mm[mode].cls;
+  document.getElementById('res-title').textContent=mm[mode].label;
+  document.getElementById('res-desc').textContent=mm[mode].desc;
+
+  var bl=f.baselineAcc*100,fa=f.fullAuto*100,fg=f.fullAug*100,fw=f.frameAcc*100;
+  var sb=fa-bl,ab=fg-bl,btc=clamp(1-Math.abs(b),0,1),rb=clamp(Math.abs(sb)*btc*0.4,0,10);
+  function fmt(v,id){var el=document.getElementById(id);el.innerHTML='';var sp=document.createElement('span');sp.textContent=(v>=0?'+':'')+v.toFixed(1)+'pp';sp.className='bv '+(v>0.5?'bpos':v<-0.5?'bneg':'bneu');el.appendChild(sp);}
+  fmt(mode==='automation'?sb:0,'b-sub');
+  fmt(mode==='augmentation'?ab:0,'b-aug');
+  fmt(mode!=='human'?rb:0,'b-re');
+
+  document.getElementById('zone-bar').innerHTML=
+    '<div class="zone-seg zone-h" style="width:'+Math.max(2,f.optH)+'%">'+(f.optH>12?f.optH+'% human':'')+'</div>'+
+    '<div class="zone-seg zone-aug" style="width:'+Math.max(2,f.optAug)+'%">'+(f.optAug>10?f.optAug+'% aug':'')+'</div>'+
+    '<div class="zone-seg zone-ai" style="width:'+Math.max(2,f.optAI)+'%">'+(f.optAI>10?f.optAI+'% auto':'')+'</div>';
+
+  perfChart.data.datasets[0].data=[bl.toFixed(1),fa.toFixed(1),fg.toFixed(1),fw.toFixed(1)];
+  perfChart.update('none');
+  benefitChart.data.datasets[0].data=[sb.toFixed(1),(ab*0.1).toFixed(1),(mode==='automation'?sb:mode==='augmentation'?sb*0.15:0).toFixed(1)];
+  benefitChart.data.datasets[1].data=[0,(ab*0.8).toFixed(1),(mode==='augmentation'?ab:0).toFixed(1)];
+  benefitChart.data.datasets[2].data=[rb.toFixed(1),0,(mode!=='human'?rb:0).toFixed(1)];
+  benefitChart.update('none');
+}
+
+// ════════════════════════════════════════════════════
+// GAME
+// ════════════════════════════════════════════════════
+function startGame(){ currentRound=0; gameAnswers=[]; showScreen('screen-game'); renderProgress(); renderRound(0); }
+
+function renderProgress(){
+  document.getElementById('game-progress').innerHTML=
+    GAME_ROUNDS.map(function(_,i){return '<div class="gp-dot '+(i<currentRound?'done':i===currentRound?'active':'')+'"></div>';}).join('');
+}
+
+function renderRound(idx){
+  var r=GAME_ROUNDS[idx], s=SCENARIO_META[r.domain], sm=SCENARIOS[r.domain];
+  document.getElementById('game-round-container').innerHTML=
+    '<div class="game-scenario-card">'+
+    '<h3>Scenario '+(idx+1)+' of 5 — '+s.label+'</h3>'+
+    '<p>'+s.desc+' Given the parameters below, decide how to allocate tasks. Remember: humans freed by automation form crowds on hard tasks!</p>'+
+    '<div class="param-grid">'+
+    '<div class="param-item"><div class="pl">'+sm.aiLabel+'</div><div class="pv">'+(r.pAI*100).toFixed(0)+'%</div></div>'+
+    '<div class="param-item"><div class="pl">'+sm.hLabel+'</div><div class="pv">'+(r.pH*100).toFixed(0)+'%</div></div>'+
+    '<div class="param-item"><div class="pl">Between-task complementarity (b)</div><div class="pv">'+r.b.toFixed(2)+'</div></div>'+
+    '<div class="param-item"><div class="pl">Within-task complementarity (r̂)</div><div class="pv">'+r.rHat.toFixed(2)+'</div></div>'+
+    '</div>'+
+    '<div class="alloc-section">'+
+    '<h4>Your task allocation</h4>'+
+    '<p>Assign percentages — must sum to 100%. Hardest tasks → humans (they crowd up thanks to freed workers). Easiest → AI automation.</p>'+
+    '<div class="alloc-inputs">'+
+    '<div class="alloc-box"><div class="ab-dot" style="background:#fac775"></div><label>Human crowd<br>(hardest tasks)</label><input type="number" id="g-human" min="0" max="100" value="34" oninput="checkSum()"><div style="font-size:11px;color:var(--color-text-tertiary);margin-top:3px">%</div></div>'+
+    '<div class="alloc-box"><div class="ab-dot" style="background:#c0dd97"></div><label>Human + AI augmentation<br>(medium tasks)</label><input type="number" id="g-aug" min="0" max="100" value="33" oninput="checkSum()"><div style="font-size:11px;color:var(--color-text-tertiary);margin-top:3px">%</div></div>'+
+    '<div class="alloc-box"><div class="ab-dot" style="background:#b5d4f4"></div><label>AI automation<br>(easiest tasks)</label><input type="number" id="g-ai" min="0" max="100" value="33" oninput="checkSum()"><div style="font-size:11px;color:var(--color-text-tertiary);margin-top:3px">%</div></div>'+
+    '</div>'+
+    '<div class="sum-indicator" id="sum-indicator">Sum: 100% ✓</div>'+
+    '</div>'+
+    '<button class="btn btn-primary" id="submit-round-btn" onclick="submitRound('+idx+')" style="width:100%">'+
+    (idx<4?'Submit & Next Scenario →':'Submit & See Results →')+
+    '</button></div>';
+  checkSum();
+}
+
+function checkSum(){
+  var h=parseInt(document.getElementById('g-human').value)||0;
+  var aug=parseInt(document.getElementById('g-aug').value)||0;
+  var ai=parseInt(document.getElementById('g-ai').value)||0;
+  var s=h+aug+ai;
+  var el=document.getElementById('sum-indicator'),btn=document.getElementById('submit-round-btn');
+  el.textContent='Sum: '+s+'% '+(s===100?'✓':'— must equal 100%');
+  el.className='sum-indicator '+(s===100?'sum-ok':'sum-bad');
+  btn.disabled=s!==100;
+}
+
+function submitRound(idx){
+  var hPct=parseInt(document.getElementById('g-human').value)||0;
+  var augPct=parseInt(document.getElementById('g-aug').value)||0;
+  var aiPct=parseInt(document.getElementById('g-ai').value)||0;
+  if(hPct+augPct+aiPct!==100) return;
+  gameAnswers.push({hPct:hPct,augPct:augPct,aiPct:aiPct});
+  currentRound++;
+  if(currentRound<5){renderProgress();renderRound(currentRound);}
+  else{showResults();}
+}
+
+// ════════════════════════════════════════════════════
+// RESULTS
+// ════════════════════════════════════════════════════
+function showResults(){
+  showScreen('screen-results');
+  var total=0;
+  document.getElementById('results-body').innerHTML='';
+  GAME_ROUNDS.forEach(function(r,i){
+    var ans=gameAnswers[i];
+    var opt=calcOptimal(r.pAI,r.pH,r.b,r.rHat);
+    var stuAcc=splitAcc(r.pAI,r.pH,r.b,r.rHat,ans.aiPct,ans.augPct,ans.hPct);
+    var optAcc=splitAcc(r.pAI,r.pH,r.b,r.rHat,opt.optAI,opt.optAug,opt.optH);
+    var sc=computeScore(stuAcc,optAcc);
+    total+=sc;
+    var spClass=sc>=5?'sp5':sc>=4?'sp4':sc>=3?'sp3':sc>=2?'sp2':'sp1';
+    var sm=SCENARIO_META[r.domain];
+    var stuCrowd=ans.hPct>0?((ans.hPct+ans.aiPct)/ans.hPct).toFixed(1):'—';
+    var optCrowd=opt.optH>0?((opt.optH+opt.optAI)/opt.optH).toFixed(1):'—';
+    document.getElementById('results-body').innerHTML+=
+      '<tr>'+
+      '<td><strong>'+sm.label+'</strong><br><span style="font-size:11px;color:var(--color-text-secondary)">AI:'+(r.pAI*100).toFixed(0)+'% H:'+(r.pH*100).toFixed(0)+'% b:'+r.b+' r̂:'+r.rHat+'</span></td>'+
+      '<td><div class="alloc-compare"><span class="ac-item">👥 '+ans.hPct+'% (×'+stuCrowd+')</span><span class="ac-item">🤝 '+ans.augPct+'%</span><span class="ac-item">🤖 '+ans.aiPct+'%</span></div></td>'+
+      '<td><div class="alloc-compare"><span class="ac-item">👥 '+opt.optH+'% (×'+optCrowd+')</span><span class="ac-item">🤝 '+opt.optAug+'%</span><span class="ac-item">🤖 '+opt.optAI+'%</span></div></td>'+
+      '<td>'+(stuAcc*100).toFixed(1)+'%</td>'+
+      '<td>'+(optAcc*100).toFixed(1)+'%</td>'+
+      '<td><span class="score-pill '+spClass+'">'+sc+'/5</span></td>'+
+      '</tr>';
+  });
+  document.getElementById('total-score-num').textContent=total;
+  var pct=Math.round(total/25*100);
+  document.getElementById('total-score-label').textContent=
+    pct>=90?'Excellent — near-optimal allocations!':
+    pct>=75?'Great work — solid intuition for complementarity.':
+    pct>=60?'Good start — review how b and r̂ drive allocation.':
+            'Keep exploring — revisit the explorer to build your intuition.';
+  submitToSheets();
+}
+
+// ════════════════════════════════════════════════════
+// GOOGLE SHEETS
+// ════════════════════════════════════════════════════
+function submitToSheets(){
+  var status=document.getElementById('submit-status');
+  if(!APPS_SCRIPT_URL||APPS_SCRIPT_URL==='PASTE_YOUR_APPS_SCRIPT_URL_HERE'){
+    status.textContent='⚠️ No submission URL configured.'; return;
+  }
+  var rows=GAME_ROUNDS.map(function(r,i){
+    var ans=gameAnswers[i];
+    var opt=calcOptimal(r.pAI,r.pH,r.b,r.rHat);
+    var stuAcc=splitAcc(r.pAI,r.pH,r.b,r.rHat,ans.aiPct,ans.augPct,ans.hPct);
+    var optAcc=splitAcc(r.pAI,r.pH,r.b,r.rHat,opt.optAI,opt.optAug,opt.optH);
+    return{name:userName,email:userEmail,timestamp:new Date().toISOString(),
+      scenario:i+1,domain:SCENARIO_META[r.domain].label,
+      pAI:r.pAI,pH:r.pH,b:r.b,rHat:r.rHat,
+      stu_human:ans.hPct,stu_aug:ans.augPct,stu_ai:ans.aiPct,
+      opt_human:opt.optH,opt_aug:opt.optAug,opt_ai:opt.optAI,
+      stu_accuracy:parseFloat((stuAcc*100).toFixed(2)),
+      opt_accuracy:parseFloat((optAcc*100).toFixed(2)),
+      score:computeScore(stuAcc,optAcc)};
+  });
+  fetch(APPS_SCRIPT_URL,{method:'POST',mode:'no-cors',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({version:APP_VERSION,rows:rows})})
+  .then(function(){status.textContent='✓ Results submitted successfully!';})
+  .catch(function(){status.textContent='Submission sent — check your sheet to confirm receipt.';});
+}
+
+// ════════════════════════════════════════════════════
+// TOOLTIPS
+// ════════════════════════════════════════════════════
+document.addEventListener('click',function(e){
+  var icon=e.target.closest('.tip');
+  document.querySelectorAll('.tip.open').forEach(function(el){if(el!==icon)el.classList.remove('open');});
+  if(icon) icon.classList.toggle('open');
+});
+
+// Expose functions needed by inline HTML handlers
+window.checkSignin  = checkSignin;
+window.doSignin     = doSignin;
+window.startGame    = startGame;
+window.setScenario  = setScenario;
+window.updateExplorer = updateExplorer;
+window.checkSum     = checkSum;
+window.submitRound  = submitRound;
+
+})(); // end IIFE
+</script>
+</body>
+</html>
